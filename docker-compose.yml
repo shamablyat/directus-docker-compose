@@ -1,29 +1,5 @@
 version: "3"
 services:
-  nginx:
-    image: nginx:1.23-alpine
-    restart: unless-stopped
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    networks:
-      - directus
-    depends_on:
-      - directus
-    #command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
-  certbot:
-    image: certbot/certbot
-    restart: unless-stopped
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    networks:
-      - directus
-    #entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
   database:
     container_name: database
     image: postgis/postgis:15-master
@@ -39,18 +15,10 @@ services:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "INSERT_DB_PASSWORD"
       POSTGRES_DB: "db_name"
-
-  cache:
-    container_name: cache
-    image: redis:6
-    networks:
-      - directus
-
+    labels:
+      kompose.controller.type: deployment
   directus:
-    container_name: directus
-    build:
-      context: "./directus/"
-      dockerfile: Dockerfile
+    image: directus/directus:10.8.3
     ports:
       - 8055:8055
     volumes:
@@ -64,8 +32,11 @@ services:
       # - ./extensions:/directus/extensions
     networks:
       - directus
+    labels:
+      kompose.controller.type: deployment
+      kompose.service.type: nodeport
+      kompose.service.nodeport.port: "30099"
     depends_on:
-      - cache
       - database
     environment:
       KEY: "INSERT_KEY"
@@ -76,15 +47,12 @@ services:
       DB_DATABASE: "db_name"
       DB_USER: "postgres"
       DB_PASSWORD: "INSERT_DB_PASSWORD"
-      CACHE_ENABLED: "true"
-      CACHE_STORE: "redis"
-      CACHE_REDIS: "redis://cache:6379"
-      ADMIN_EMAIL: "INSERT_ADMIN_EMAIL"
-      ADMIN_PASSWORD: "INSERT_ADMIN_PASSWORD"
+      ADMIN_EMAIL: "admin1@gmail.com"
+      ADMIN_PASSWORD: "admin1"
 
       # Make sure to set this in production
       # (see https://docs.directus.io/self-hosted/config-options#general)
-      PUBLIC_URL: "https://INSERT_PUBLIC_URL"
+      PUBLIC_URL: "http://35.192.188.184"
 
 networks:
   directus:
