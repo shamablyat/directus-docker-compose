@@ -1,1 +1,1 @@
-run kompose convert to convert docker-compose.yml file to kubernetes file
+run "kompose convert -f docker-compose.yml" to convert docker-compose.yml file to kubernetes file
